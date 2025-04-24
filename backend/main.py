@@ -1,15 +1,15 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import openai  # Necesitarás la librería de OpenAI para interactuar con su API
 from sqlalchemy.orm import Session
 from db import SessionLocal
 from models import User
 from passlib.context import CryptContext
+from gemini_api import obtener_respuesta
+from commands import ejecutar_comando_local
 
 app = FastAPI()
 
-# Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,26 +18,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configuración de la contraseña
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Configuración de la API de OpenAI
-openai.api_key = 'AIzaSyC2PsI56K9xohffAoZN33N7wmXq-CvLlHg'  # Reemplaza con tu clave API de OpenAI
-
-# Modelo para el login
 class LoginInput(BaseModel):
     email: str
     password: str
 
-# Modelo para el chat
 class ChatInput(BaseModel):
     message: str
-    
+
 class RegisterInput(BaseModel):
     email: str
     password: str
 
-# Función para obtener la sesión de la base de datos
 def get_db():
     db = SessionLocal()
     try:
@@ -45,7 +38,6 @@ def get_db():
     finally:
         db.close()
 
-# Ruta de login
 @app.post("/login")
 def login(data: LoginInput, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.usuario == data.email).first()
@@ -53,11 +45,14 @@ def login(data: LoginInput, db: Session = Depends(get_db)):
         return {"success": True}
     raise HTTPException(status_code=401, detail="Credenciales inválidas")
 
-# Ruta para el chat
 @app.post("/chat")
 def chat(data: ChatInput):
     try:
-        # Llamamos a la función de Gemini para obtener la respuesta
+        if data.message.startswith('/'):
+            response_comando = ejecutar_comando_local(data.message)
+            if response_comando:
+                return {"response": response_comando}
+        
         response = obtener_respuesta(data.message)
         if response:
             return {"response": response}
@@ -81,6 +76,3 @@ def register(data: RegisterInput, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     return {"message": "Usuario registrado exitosamente"}
-
-
-
