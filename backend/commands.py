@@ -1,82 +1,149 @@
+# commands.py
+
+import torch
+import torch.nn as nn
 import subprocess
 import pyautogui
 import time
 import webbrowser
-import os
+import datetime
+from sklearn.feature_extraction.text import CountVectorizer
 
-# Función para ejecutar comandos locales
-def ejecutar_comando_local(texto: str) -> str:
-    texto = texto.lower()
 
-    # Comando para mostrar la ayuda
-    if texto == "/help":
-        return (
-        "Aquí tienes una lista de los comandos disponibles:\n\n"
-        "1. /calculadora: Abre la calculadora.\n"
-        "2. /bloc de notas: Abre el Bloc de Notas.\n"
-        "3. /explorador de archivos: Abre el explorador de archivos.\n"
-        "4. /escribir [texto]: Escribe el texto proporcionado en el Bloc de Notas.\n"
-        "5. /abrir navegador [url]: Abre el navegador y carga la URL proporcionada.\n"
-        "6. /captura: Toma una captura de pantalla.\n"
-        "7. /buscar [término]: Realiza una búsqueda en Google del término proporcionado.\n"
-        "8. /cerrar [nombre de la aplicación]: Cierra la aplicación proporcionada (por ejemplo, 'notepad.exe').\n\n"
-        "Para ejecutar un comando, solo debes escribirlo en la conversación.\n"
-        "Recuerda que los comandos deben empezar con el carácter '/'."
-        )
+class CommandClassifier(nn.Module):
+    def __init__(self, input_size, num_classes):
+        super().__init__()
+        self.linear = nn.Linear(input_size, num_classes)
 
-    # Comando para abrir la calculadora
-    elif "calculadora" in texto:
-        subprocess.Popen("calc.exe")
-        return "🧮 Calculadora abierta."
+    def forward(self, x):
+        return self.linear(x)
 
-    # Comando para abrir el Bloc de Notas
-    elif "bloc de notas" in texto or "notas" in texto:
-        subprocess.Popen("notepad.exe")
-        return "📓 Bloc de notas abierto."
 
-    # Comando para abrir el explorador de archivos
-    elif "explorador de archivos" in texto:
-        subprocess.Popen("explorer.exe")
-        return "🗂️ Explorador de archivos abierto."
+class AsistenteComandosIA:
+    def __init__(self):
+        self.train_data = [
+            ("abre la calculadora", "abrir_calculadora"),
+            ("abre el bloc de notas", "abrir_bloc"),
+            ("toma una captura", "captura_pantalla"),
+            ("busca gatos en google", "buscar_en_google"),
+            ("cierra el bloc de notas", "cerrar_bloc"),
+            ("abre el explorador de archivos", "abrir_explorador"),
+            ("escribe hola mundo", "escribir_texto"),
+            ("bloquear pantalla", "bloquear_pantalla"),
+            ("reinicia", "reiniciar_pc"),
+            ("apaga", "apagar_pc"),
+            ("abre paint", "abrir_paint"),
+            ("abre cmd", "abrir_cmd"),
+            ("abre powershell", "abrir_powershell"),
+            ("cierra la calculadora", "cerrar_calculadora"),
+            ("mostrar hora", "mostrar_hora"),
+            ("vaciar papelera", "vaciar_papelera"),
+        ]
 
-    # Comando para escribir en el Bloc de Notas
-    elif texto.startswith("/escribir "):
-        texto_a_escribir = texto[len("/escribir "):].strip()
-        if texto_a_escribir:
+        texts, labels = zip(*self.train_data)
+        self.vectorizer = CountVectorizer()
+        X = self.vectorizer.fit_transform(texts).toarray()
+
+        self.label_to_idx = {label: i for i, label in enumerate(set(labels))}
+        self.idx_to_label = {i: label for label, i in self.label_to_idx.items()}
+        y = torch.tensor([self.label_to_idx[label] for label in labels])
+
+        self.model = CommandClassifier(input_size=X.shape[1], num_classes=len(self.label_to_idx))
+        loss_fn = nn.CrossEntropyLoss()
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=0.01)
+
+        for _ in range(100):
+            inputs = torch.tensor(X).float()
+            outputs = self.model(inputs)
+            loss = loss_fn(outputs, y)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+    def interpretar(self, texto_usuario):
+        texto_usuario = texto_usuario.lower()
+        vect = self.vectorizer.transform([texto_usuario]).toarray()
+        with torch.no_grad():
+            output = self.model(torch.tensor(vect).float())
+            predicted_idx = torch.argmax(output, dim=1).item()
+            return self.idx_to_label[predicted_idx]
+
+    def ejecutar(self, texto_usuario):
+        texto_usuario = texto_usuario.strip()
+        intencion = self.interpretar(texto_usuario)
+
+        if intencion == "abrir_calculadora":
+            subprocess.Popen("calc.exe")
+            return "🧮 Calculadora abierta."
+
+        elif intencion == "abrir_bloc":
+            subprocess.Popen("notepad.exe")
+            return "📓 Bloc de notas abierto."
+
+        elif intencion == "captura_pantalla":
+            screenshot = pyautogui.screenshot()
+            screenshot.save("captura.png")
+            return "📸 Captura guardada como 'captura.png'."
+
+        elif intencion == "buscar_en_google":
+            termino = texto_usuario.replace("busca", "").strip()
+            url = f"https://www.google.com/search?q={termino}"
+            webbrowser.open(url)
+            return f"🔍 Buscando: {termino}"
+
+        elif intencion == "cerrar_bloc":
+            subprocess.Popen("taskkill /f /im notepad.exe")
+            return "❌ Bloc de notas cerrado."
+
+        elif intencion == "abrir_explorador":
+            subprocess.Popen("explorer.exe")
+            return "🗂️ Explorador de archivos abierto."
+
+        elif intencion == "escribir_texto":
+            texto = texto_usuario.replace("escribe", "").strip()
             subprocess.Popen("notepad.exe")
             time.sleep(1)
-            pyautogui.typewrite(texto_a_escribir)
-            return f"✍️ Escribí en el Bloc de Notas: {texto_a_escribir}"
+            pyautogui.typewrite(texto)
+            return f"✍️ Texto escrito: {texto}"
 
-    # Comando para abrir el navegador y cargar una URL
-    elif texto.startswith("/abrir navegador "):
-        url = texto[len("/abrir navegador "):].strip()
-        if url:
-            webbrowser.open(url)
-            return f"🌐 Abriendo navegador con la URL: {url}"
+        elif intencion == "bloquear_pantalla":
+            subprocess.Popen("rundll32.exe user32.dll,LockWorkStation")
+            return "🔒 Pantalla bloqueada."
 
-    # Comando para tomar una captura de pantalla
-    elif texto == "/captura":
-        screenshot = pyautogui.screenshot()
-        screenshot.save("captura.png")  # Guarda la captura como "captura.png"
-        return "📸 Captura de pantalla tomada y guardada como 'captura.png'."
+        elif intencion == "reiniciar_pc":
+            subprocess.Popen("shutdown /r /t 0")
+            return "🔁 Reiniciando el equipo..."
 
-    # Comando para realizar una búsqueda en Google
-    elif texto.startswith("/buscar "):
-        search_term = texto[len("/buscar "):].strip()
-        if search_term:
-            search_url = f"https://www.google.com/search?q={search_term}"
-            webbrowser.open(search_url)
-            return f"🔍 Buscando en Google: {search_term}"
+        elif intencion == "apagar_pc":
+            subprocess.Popen("shutdown /s /t 0")
+            return "⏻ Apagando el equipo..."
 
-    # Comando para cerrar una aplicación
-    elif texto.startswith("/cerrar "):
-        app_name = texto[len("/cerrar "):].strip()
-        try:
-            # Esto cierra una aplicación por su nombre (por ejemplo: "notepad.exe")
-            subprocess.Popen(f"taskkill /f /im {app_name}")
-            return f"❌ Aplicación {app_name} cerrada."
-        except Exception as e:
-            return f"⚠️ No se pudo cerrar la aplicación {app_name}. Error: {str(e)}"
+        elif intencion == "abrir_paint":
+            subprocess.Popen("mspaint.exe")
+            return "🎨 Paint abierto."
 
-    return None  # No es un comando local reconocido
+        elif intencion == "abrir_cmd":
+            subprocess.Popen("cmd.exe", creationflags=subprocess.CREATE_NEW_CONSOLE)
+            return "🖥️ CMD abierto."
+
+        elif intencion == "abrir_powershell":
+            subprocess.Popen(["powershell.exe"])
+            return "📘 PowerShell abierto."
+
+        elif intencion == "cerrar_calculadora":
+            subprocess.Popen("taskkill /f /im calc.exe")
+            return "❌ Calculadora cerrada."
+
+        elif intencion == "mostrar_hora":
+            return f"🕒 Hora actual: {datetime.datetime.now().strftime('%H:%M:%S')}"
+
+        elif intencion == "vaciar_papelera":
+            subprocess.call(['powershell', '-command', 'Clear-RecycleBin', '-Force'])
+            return "🗑️ Papelera vaciada."
+
+        return "🤖 Comando no reconocido."
+
+asistente_ia = AsistenteComandosIA()
+
+def ejecutar_comando_local(texto: str) -> str:
+    return asistente_ia.ejecutar(texto)
