@@ -159,10 +159,6 @@ class AsistenteComandosIA:
                 subprocess.Popen("cmd.exe", creationflags=subprocess.CREATE_NEW_CONSOLE)
                 return "🖥️ CMD abierto."
 
-            elif intencion == "abrir_powershell":
-                subprocess.Popen(["powershell.exe"])
-                return "📘 PowerShell abierto."
-
             elif intencion == "cerrar_calculadora":
                 subprocess.Popen("taskkill /f /im calc.exe")
                 return "❌ Calculadora cerrada."
