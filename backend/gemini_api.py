@@ -3,7 +3,6 @@ import os
 from dotenv import load_dotenv
 from datetime import datetime
 
-# Cargar variables de entorno
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 
@@ -12,7 +11,6 @@ if api_key is None:
 
 genai.configure(api_key=api_key)
 
-# Crear el modelo y una sesión de chat persistente
 model = genai.GenerativeModel("gemini-2.0-flash")
 chat = model.start_chat(history=[])
 
@@ -22,7 +20,6 @@ def obtener_respuesta(mensaje_usuario: str) -> str:
 
         fecha_actual = datetime.now().strftime("%A, %d de %B de %Y")
 
-        # Mensaje de sistema para darle contexto persistente al chat
         mensaje_con_contexto = (
             f"Eres un asistente llamado Radiant AI. "
             f"La fecha de hoy es {fecha_actual}. "
@@ -31,7 +28,6 @@ def obtener_respuesta(mensaje_usuario: str) -> str:
             f"\n\nUsuario: {mensaje_usuario}"
         )
 
-        # Enviar mensaje al chat (que mantiene el historial)
         response = chat.send_message(mensaje_con_contexto)
 
         return response.text.strip()

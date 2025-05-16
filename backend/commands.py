@@ -19,7 +19,6 @@ class CommandClassifier(nn.Module):
 
 class AsistenteComandosIA:
     def __init__(self):
-        # Datos de entrenamiento
         self.train_data = [
             ("abre la calculadora", "abrir_calculadora"),
             ("inicia la calculadora", "abrir_calculadora"),
@@ -71,7 +70,6 @@ class AsistenteComandosIA:
             ("quiero vaciar la papelera", "vaciar_papelera"),
         ]
 
-        # Preprocesamiento y entrenamiento del modelo
         texts, labels = zip(*self.train_data)
         self.vectorizer = CountVectorizer()
         X = self.vectorizer.fit_transform(texts).toarray()
@@ -175,10 +173,7 @@ class AsistenteComandosIA:
         except Exception as e:
             return f"❌ Error al ejecutar el comando: {str(e)}"
 
-
-# Instanciación del asistente
 asistente_ia = AsistenteComandosIA()
 
-# Función para ejecutar comandos localmente
 def ejecutar_comando_local(texto: str) -> str:
     return asistente_ia.ejecutar(texto)
