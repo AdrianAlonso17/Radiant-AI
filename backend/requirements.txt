@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+requests
+google-generativeai
+scikit-learn
+torch
+pyautogui
+pymysql
+sqlalchemy
+passlib[bcrypt]

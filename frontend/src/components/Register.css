@@ -1,0 +1,161 @@
+/* Animación de entrada */
+@keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Fondo de la página de registro */
+  .register-page {
+    min-height: 100vh;
+    background: linear-gradient(to right, #a7ffc3, #ffffff); /* Mismo fondo que login */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  /* Estilo del contenedor de registro */
+  .register-container {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    max-width: 340px;
+    width: 100%;
+    padding: 35px 30px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    animation: fadeIn 0.8s ease-out; /* Animación de entrada */
+  }
+  
+  /* Título de la página de registro */
+  .register-container h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 26px;
+    font-weight: 600;
+    color: #333;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  
+  /* Estilo del formulario */
+  .register-container form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Estilo de las etiquetas de los campos */
+  .register-container label {
+    display: block;
+    margin-bottom: 8px;
+    color: #444;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  /* Estilo de los campos de entrada */
+  .register-container input {
+    width: 100%;
+    padding: 11px;
+    border-radius: 6px;
+    border: 1px solid #ccd6dd;
+    background-color: #f9f9f9;
+    color: #333;
+    font-size: 15px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+  }
+  
+  /* Efecto de enfoque en los campos */
+  .register-container input:focus {
+    border-color: #00bcd4;
+    background-color: #ffffff;
+    outline: 2px solid #b2ebf2;
+    outline-offset: 2px;
+    transform: scale(1.03);
+  }
+  
+  /* Estilo de los botones */
+  .register-container button {
+    padding: 11px;
+    background-color: #10a348;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    margin-top: 10px;
+  }
+  
+  /* Hover en el botón */
+  .register-container button:hover {
+    background-color: #0097a7;
+    transform: translateY(-2px);
+  }
+  
+  /* Enfoque en el botón */
+  .register-container button:focus {
+    outline: 3px solid #00bcd4;
+    outline-offset: 3px;
+  }
+  
+  /* Mensaje de error */
+  .error-message {
+    background-color: #f8d7da; /* Rojo claro */
+    color: #721c24; /* Texto en rojo oscuro */
+    border: 1px solid #f5c6cb; /* Borde de rojo claro */
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 10px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  .error-icon {
+    margin-right: 8px;
+    font-size: 18px;
+  }
+  
+  /* Responsividad */
+  @media (max-width: 480px) {
+    .register-container {
+      padding: 30px 20px;
+    }
+  
+    .register-container h2 {
+      font-size: 22px;
+    }
+  
+    .register-container button {
+      font-size: 14px;
+    }
+  }
+  
+  /* Enlace para redirigir al login */
+  .register-link {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .register-link a {
+    color: #10a348;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  .register-link a:hover {
+    color: #0097a7;
+  }
+  
