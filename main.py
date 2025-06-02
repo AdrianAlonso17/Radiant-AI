@@ -1,11 +1,42 @@
 import subprocess
 import os
 import time
-import psutil
 import sys
-import signal
 
-def kill_processes_by_name(name_keywords):
+def ensure_psutil_installed():
+    try:
+        import psutil
+    except ImportError:
+        print("psutil no está instalado. Instalando psutil...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "psutil"])
+        import psutil
+    return psutil
+
+def run_command(command, cwd=None):
+    """
+    Ejecuta un comando dentro de PowerShell y espera a que termine.
+    """
+    print(f"Ejecutando: {' '.join(command)} en {cwd or os.getcwd()}")
+    command_str = ' '.join(command)
+    powershell_cmd = ['powershell.exe', '-NoProfile', '-Command', command_str]
+    result = subprocess.run(powershell_cmd, cwd=cwd, shell=False)
+    if result.returncode != 0:
+        raise RuntimeError(f"Error al ejecutar {command_str}")
+
+def frontend_install_if_needed(frontend_dir):
+    node_modules_path = os.path.join(frontend_dir, 'node_modules')
+    if not os.path.exists(node_modules_path):
+        print("Instalando dependencias frontend...")
+        run_command(['npm', 'install'], cwd=frontend_dir)
+        run_command(['npm', 'install', 'react-router-dom', 'axios'], cwd=frontend_dir)
+    else:
+        print("Dependencias frontend ya instaladas.")
+
+def backend_install_always(backend_dir):
+    print("Instalando dependencias backend (sin comprobación)...")
+    run_command(['python', '-m', 'pip', 'install', '-r', 'requirements.txt'], cwd=backend_dir)
+
+def kill_processes_by_name(name_keywords, psutil):
     """
     Mata todos los procesos que contengan alguna de las palabras clave en su cmdline,
     excepto este proceso y sus hijos.
@@ -36,32 +67,8 @@ def kill_processes_by_name(name_keywords):
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
 
-def run_command(command, cwd=None):
-    """
-    Ejecuta un comando dentro de PowerShell y espera a que termine.
-    """
-    print(f"Ejecuntando: {' '.join(command)} en {cwd or os.getcwd()}")
-    command_str = ' '.join(command)
-    powershell_cmd = ['powershell.exe', '-NoProfile', '-Command', command_str]
-    result = subprocess.run(powershell_cmd, cwd=cwd, shell=False)
-    if result.returncode != 0:
-        raise RuntimeError(f"Error al ejecutar {command_str}")
-
-def frontend_install_if_needed(frontend_dir):
-    node_modules_path = os.path.join(frontend_dir, 'node_modules')
-    if not os.path.exists(node_modules_path):
-        print("Instalando dependencias frontend...")
-        run_command(['npm', 'install'], cwd=frontend_dir)
-        run_command(['npm', 'install', 'react-router-dom', 'axios'], cwd=frontend_dir)
-    else:
-        print("Dependencias frontend ya instaladas.")
-
-def backend_install_always(backend_dir):
-    print("Instalando dependencias backend (sin comprobación)...")
-    run_command(['python', '-m', 'pip', 'install', '-r', 'requirements.txt'], cwd=backend_dir)
-
 def main():
-    # Detectar directorio base según si es .exe o script python
+    # Detectar directorio base
     if getattr(sys, 'frozen', False):
         base_dir = os.path.dirname(sys.executable)
     else:
@@ -74,15 +81,19 @@ def main():
     print(f"Directorio backend: {BACKEND_DIR}")
     print(f"Directorio frontend: {FRONTEND_DIR}")
 
-    # Cerrar procesos que puedan estar usando los puertos o archivos
-    kill_processes_by_name(['npm', 'react-scripts', 'webpack', 'uvicorn'])
+    # Instalar dependencias backend
+    backend_install_always(BACKEND_DIR)
+
+    # Asegurar psutil instalado antes de usarlo
+    psutil = ensure_psutil_installed()
+
+    # Cerrar procesos que puedan estar usando puertos o archivos
+    kill_processes_by_name(['npm', 'react-scripts', 'webpack', 'uvicorn'], psutil)
 
     time.sleep(2)
 
-    # Instalar frontend solo si es necesario
+    # Instalar frontend si es necesario
     frontend_install_if_needed(FRONTEND_DIR)
-    # Instalar backend siempre (o cambiar lógica si prefieres)
-    backend_install_always(BACKEND_DIR)
 
     print("Lanzando backend con uvicorn...")
     backend_cmd = f'{sys.executable} -m uvicorn main:app --reload'
