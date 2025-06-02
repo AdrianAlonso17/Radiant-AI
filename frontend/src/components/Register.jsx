@@ -6,12 +6,12 @@ import './Register.css';
 function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState(""); // Estado para mostrar errores
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setErrorMessage(""); // Limpiar mensaje de error anterior
+    setErrorMessage("");
   
     try {
       const response = await axios.post("http://localhost:8000/register", {
@@ -24,7 +24,7 @@ function Register() {
         navigate("/");
       }
     } catch (error) {
-      console.error("Error al registrar:", error);  // Mostrar error en la consola
+      console.error("Error al registrar:", error);
       setErrorMessage("Error al registrar el usuario: " + (error.response?.data?.detail || "Error desconocido"));
     }
   };

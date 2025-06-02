@@ -6,12 +6,12 @@ import './Login.css';
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState(""); // Estado para mostrar errores
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setErrorMessage(""); // Limpiar mensaje de error anterior
+    setErrorMessage("");
 
     try {
       const res = await axios.post("http://localhost:8000/login", {

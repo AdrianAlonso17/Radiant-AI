@@ -31,11 +31,10 @@ function ChatBox() {
     }
   };
 
-  // Función que se ejecuta al presionar una tecla
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      e.preventDefault(); // Prevenir el comportamiento por defecto de la tecla Enter (como un salto de línea)
-      sendMessage(); // Llamamos a la función de envío del mensaje
+      e.preventDefault();
+      sendMessage();
     }
   };
 
@@ -66,7 +65,7 @@ function ChatBox() {
             className="chatbox-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown} // Añadimos el evento onKeyDown
+            onKeyDown={handleKeyDown}
             placeholder="Escribe algo..."
           />
           <button className="chatbox-button" onClick={sendMessage}>

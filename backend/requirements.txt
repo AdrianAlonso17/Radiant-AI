@@ -9,3 +9,4 @@ pyautogui
 pymysql
 sqlalchemy
 passlib[bcrypt]
+psutil
